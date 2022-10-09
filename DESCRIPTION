@@ -9,7 +9,7 @@ Description: WAV files store waveforms acquired by Flamel progam
  (https://github.com/eto-/flamel). This package allows to read the raw data and
  the metadata looping through the file.
 License: GPL (>= 3)
-Imports: Rcpp (>= 1.0.9)
+Imports: Rcpp (>= 1.0.6)
 NeedsCompilation: yes
 URL: https://github.com/eto-/wavr
 LinkingTo: Rcpp
