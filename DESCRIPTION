@@ -1,0 +1,15 @@
+Package: wavr
+Type: Package
+Title: Read and loop on raw data wav files from Flamel
+Version: 1.0
+Date: 2022-10-09
+Author: Alessandro Razeto
+Maintainer: Alessandro Razeto <alessandro@razeto.it>
+Description: WAV files store waveforms acquired by Flamel progam 
+ (https://github.com/eto-/flamel). This package allows to read the raw data and
+ the metadata looping through the file.
+License: GPL (>= 3)
+Imports: Rcpp (>= 1.0.9)
+NeedsCompilation: yes
+URL: https://github.com/eto-/wavr
+LinkingTo: Rcpp
