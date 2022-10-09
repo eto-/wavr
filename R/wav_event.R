@@ -71,35 +71,34 @@ wav_entries <- function (filename) {
   n
 }
 
-wav_apply <- function (filename, index=NULL, start=1, entries=Inf, data=T, apply_fun=sapply, fun, ...) {
-  indexes <- attr(wav_apply, "indexes")
-  if (is.null(indexes)) indexes <- list()
-  if (is.null(index)) index <- indexes[[filename]]
+wav_apply <- local({
+  indexes <- list()
+    function (filename, index=NULL, start=1, entries=Inf, data=T, apply_fun=sapply, fun, ...) {
+    if (is.null(index)) index <- indexes[[filename]]
 
-  if (is.null(index)) {
-    cat("Building index\n")
-    t <- wav_entries (filename)
-    index <- attr(t, "index")
-  } 
-  total_entries <- length(index)
-
-
-  end <- ifelse(is.infinite(entries), total_entries, ifelse(entries > 0, min(start + entries - 1, total_entries), total_entries + entries))
-		
-  if (end < start) return()
-  cat("Processing", end - start + 1, "entries from", filename, "\n")
-
-  process_event <- function (id, indexes, filename, data, fun, ...) fun(wav_event(filename, indexes[id], data), id=id,...)
-
-  k <- apply_fun(start:end, process_event, index, filename, data, fun, ...)
+    if (is.null(index)) {
+      cat("Building index\n")
+      t <- wav_entries (filename)
+      index <- attr(t, "index")
+    } 
+    total_entries <- length(index)
 
 
-  indexes[[filename]] <- index
-  attr(wav_apply, "indexes") <<- indexes
+    end <- ifelse(is.infinite(entries), total_entries, ifelse(entries > 0, min(start + entries - 1, total_entries), total_entries + entries))
+		  
+    if (end < start) return()
+    cat("Processing", end - start + 1, "entries from", filename, "\n")
 
-  attr(k, "index") <- index
-  k
-}
+    process_event <- function (id, indexes, filename, data, fun, ...) fun(wav_event(filename, indexes[id], data), id=id,...)
+
+    k <- apply_fun(start:end, process_event, index, filename, data, fun, ...)
+
+
+    indexes[[filename]] <<- index
+
+    attr(k, "index") <- index
+    k
+}})
 
 unroll_timetag <- function (time.tag, cpu.time, tag.step=8e-9) {
   d <- data.frame(tag=time.tag, cpu=cpu.time)
