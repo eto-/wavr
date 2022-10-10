@@ -71,7 +71,16 @@ wav_entries <- function (filename) {
   n
 }
 
-wav_apply <- local({
+wav_apply <- local({ 
+  # environment is locked in package, global assignement <<- does not work
+  # this solution creates a sub-environment for wav_apply
+  #   (https://stackoverflow.com/questions/59126349/emulating-static-variable-within-r-functions)
+  # alternativelly an explicit environment could be created 
+  #   (https://adv-r.hadley.nz/environments.html)
+  #   .e <- new.env(parent = emptyenv()); .e$indexes <- list()
+  # or using a global environment dot variable 
+  #   (https://community.rstudio.com/t/how-to-use-modify-a-dataset-internal-to-an-r-package/84577)
+  #   .onLoad <- function(...) assign(".indexes", list(), envir = globalenv())
   indexes <- list()
     function (filename, index=NULL, start=1, entries=Inf, data=T, apply_fun=sapply, fun, ...) {
     if (is.null(index)) index <- indexes[[filename]]
