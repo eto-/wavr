@@ -82,9 +82,13 @@ wav_apply <- local({
   #   (https://community.rstudio.com/t/how-to-use-modify-a-dataset-internal-to-an-r-package/84577)
   #   .onLoad <- function(...) assign(".indexes", list(), envir = globalenv())
   indexes <- list()
-    function (filename, index=NULL, start=1, entries=Inf, data=T, apply_fun=sapply, fun, ...) {
+  function (filename, index=NULL, start=1, entries=Inf, data=T, apply_fun=sapply, fun, ...) {
     if (is.null(index)) index <- indexes[[filename]]
-    else if (is.na(index)) index <- NULL
+    
+    if (entries < 0) {
+      index <- NULL
+      entries <- -entries
+    }
 
     if (is.null(index)) {
       cat("Building index\n")
