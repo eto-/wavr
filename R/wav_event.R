@@ -131,8 +131,10 @@ analyze <- function (file, fun, entries=0, parallel=T, ...) {
   if (exists("rbindlist")) d <- rbindlist(v) #, fill=T)
   else d <- do.call(rbind.data.frame, v)
 
-  d$time <- unroll_timetag(d$time, d$cpu.time)
   d$name <- file
+  d$time <- unroll_timetag(d$time, d$cpu.time)
+  d$dt <- c(0, diff(d$time))
+  d$time <- d$time + as.POSIXct(wav_event(file, offset=1, data=F)$date, "%c")
   d$index <- attr(v, "index")[d$id]
   d$unique <- diff(c(0, d$id)) > 0
 
