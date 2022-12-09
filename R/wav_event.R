@@ -127,7 +127,7 @@ unroll_timetag <- function (time.tag, cpu.time, tag.step=8e-9) {
 
 analyze <- function (file, fun, entries=0, parallel=T, ...) {
   f_ <- function (x, id, ...)  {
-    h <- c(id=id, time=x$time.tag, cpu.time=x$cpu.time.ms * 1e-3, dt=NA)
+    h <- c(id=id, time=x$time.tag, cpu.time=x$cpu.time.ms * 1e-3, date=NA)
     r <- fun(x, ...)
     c(h, r)
   }
@@ -138,8 +138,7 @@ analyze <- function (file, fun, entries=0, parallel=T, ...) {
 
   d$name <- file
   d$time <- unroll_timetag(d$time, d$cpu.time)
-  d$dt <- c(0, diff(d$time))
-  d$time <- d$time + as.POSIXct(wav_event(file, offset=1, data=F)$date, format="%c")
+  d$date <- as.POSIXct(wav_event(file, offset=1, data=F)$date, format="%c")
   d$cpu.time <- NULL
   d$index <- attr(v, "index")[d$id]
   d$unique <- diff(c(0, d$id)) > 0
