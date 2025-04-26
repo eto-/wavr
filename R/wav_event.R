@@ -23,7 +23,7 @@ wav_event <- function (filename, offset, data=T) {
   data.size <- if (version >= 2) to_32 (f$data[13:14]) else n.channels * n.samples
   
   v <- list(counter=counter, time.tag=time.tag, n.samples=n.samples, n.channels=n.channels, cpu.time.ms=cpu.time.ms, version=version, 
-	    offset=offset, header.size=header.size, data.size=data.size, sample.rate=f$sample_rate, sample.nbits=f$sample_nbits, date=f$date, raw.data=f$data)
+	    offset=offset, header.size=header.size, data.size=data.size, sample.rate=f$sample_rate, sample.nbits=f$sample_nbits, date=f$date)
 
 
   if (data) {
@@ -127,7 +127,7 @@ unroll_timetag <- function (time.tag, cpu.time, tag.step=8e-9) {
 
 analyze <- function (file, fun, entries=0, parallel=T, ...) {
   f_ <- function (x, id, ...)  {
-    h <- c(id=id, time=x$time.tag, cpu.time=x$cpu.time.ms * 1e-3, date=NA)
+    h <- c(id=id, counter=x$counter, time=x$time.tag, cpu.time=x$cpu.time.ms * 1e-3, date=NA)
     r <- fun(x, ...)
     c(h, r)
   }
