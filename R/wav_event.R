@@ -128,8 +128,8 @@ unroll_timetag <- function (time.tag, cpu.time, tag.step=8e-9) {
 analyze <- function (file, fun, entries=0, parallel=T, ...) {
   f_ <- function (x, id, ...)  {
     h <- c(id=id, counter=x$counter, time=x$time.tag, cpu.time=x$cpu.time.ms * 1e-3, date=NA)
-    r <- fun(x, ...)
-    c(h, r)
+    r <- as.data.frame(fun(x, ...))
+    cbind(r, do.call(rbind, rep(list(h), nrow(r))))
   }
   
   v <- wav_apply(file, entries=entries, data=T, apply_fun=ifelse(parallel,  mclapply, lapply), fun=f_, ...)
