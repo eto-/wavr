@@ -125,7 +125,7 @@ unroll_timetag <- function (time.tag, cpu.time, tag.step=8e-9) {
   t
 }
 
-analyze <- function (file, fun, entries=0, parallel=T, ...) {
+wav_analyze <- function (file, fun, entries=0, parallel=T, ...) {
   f_ <- function (x, id, ...)  {
     h <- c(id=id, counter=x$counter, time=x$time.tag, cpu.time=x$cpu.time.ms * 1e-3, date=NA)
     r <- as.data.frame(fun(x, ...))

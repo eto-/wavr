@@ -1,4 +1,3 @@
 useDynLib(wavr, .registration = TRUE)
 importFrom(Rcpp, evalCpp)
-export(analyze)
 exportPattern("^wav_")
