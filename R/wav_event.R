@@ -5,6 +5,10 @@ wav_event <- function (filename, offset, data=T) {
   to_32 <- function (v) v[1] + 65536 * v[2]
 
   f <- cpp_read_sndfile (filename, from=offset, to=offset + header.size - 1)
+  if (length (f$data) != header.size) {
+    warning("corrupted header")
+    return(NULL)
+  }
   if (0xFFFF != f$data[1]) stop("marker not found")
   if (header.size != f$data[2]) stop("wrong header size")
   counter <- to_32 (f$data[3:4])
@@ -28,6 +32,10 @@ wav_event <- function (filename, offset, data=T) {
 
   if (data) {
     f <- cpp_read_sndfile (filename, from=offset + header.size, to=offset + header.size + data.size - 1, metadata=F)
+    if (length (f$data) != data.size) {
+      warning("incomplete event")
+      return(v)
+    }
     if (n.channels == 1) {
       if (version < 2) v$data <- list('1' = f$data)
       else {
@@ -62,6 +70,7 @@ wav_entries <- function (filename) {
   n <- 0
   while (offset < total.size) {
     e <- wav_event(filename, offset, data=F)
+    if (is.null(e)) break
     n <- n + 1
     if (n >= length(index)) index <- c(index, rep(0, n * 10))
     index[n] <- offset
@@ -82,7 +91,7 @@ wav_apply <- local({
   #   (https://community.rstudio.com/t/how-to-use-modify-a-dataset-internal-to-an-r-package/84577)
   #   .onLoad <- function(...) assign(".indexes", list(), envir = globalenv())
   indexes <- list()
-  function (filename, index=NULL, start=1, entries=Inf, data=T, apply_fun=sapply, fun, ...) {
+  function (filename, index=NULL, start=1, entries=Inf, data=T, verbose=F, apply_fun=sapply, fun, ...) {
     if (is.null(index)) index <- indexes[[filename]]
     
     if (entries < 0) {
@@ -91,7 +100,7 @@ wav_apply <- local({
     }
 
     if (is.null(index)) {
-      cat("Building index\n")
+      if (verbose) cat("Building index\n")
       t <- wav_entries (filename)
       index <- attr(t, "index")
     } 
@@ -101,7 +110,7 @@ wav_apply <- local({
     end <- ifelse(is.infinite(entries), total_entries, ifelse(entries > 0, min(start + entries - 1, total_entries), total_entries + entries))
 		  
     if (end < start) return()
-    cat("Processing", end - start + 1, "entries from", filename, "\n")
+    if (verbose) cat("Processing", end - start + 1, "entries from", filename, "\n")
 
     process_event <- function (id, indexes, filename, data, fun, ...) fun(wav_event(filename, indexes[id], data), id=id,...)
 
