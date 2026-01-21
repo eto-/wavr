@@ -9,7 +9,7 @@ Rcpp::NumericVector read_n (SndfileHandle& file, int len) {
   sf_count_t c = file.read (&v[0], len);
 
   if (c != len) {
-    std::cerr << "error: " << file.strError() << std::endl;
+    if (file.error () != SF_ERR_NO_ERROR) std::cerr << "error: " << file.strError() << std::endl;
     return Rcpp::NumericVector(0);
   }
 
