@@ -2,14 +2,13 @@
 #include <sys/stat.h>
 #include <sndfile.hh>
 #include <vector>
-#include <iostream>
 
 Rcpp::NumericVector read_n (SndfileHandle& file, int len) {
   std::vector<short int> v(len);
   sf_count_t c = file.read (&v[0], len);
 
   if (c != len) {
-    if (file.error () != SF_ERR_NO_ERROR) std::cerr << "error: " << file.strError() << std::endl;
+    if (file.error () != SF_ERR_NO_ERROR) Rcpp::Rcerr << "error: " << file.strError() << std::endl;
     return Rcpp::NumericVector(0);
   }
 
