@@ -134,14 +134,14 @@ unroll_timetag <- function (time.tag, cpu.time, tag.step=8e-9) {
   t
 }
 
-wav_analyze <- function (file, fun, entries=0, parallel=T, ...) {
+wav_analyze <- function (file, fun, entries=0, ...) {
   f_ <- function (x, id, ...)  {
     h <- c(id=id, counter=x$counter, time=x$time.tag, cpu.time=x$cpu.time.ms * 1e-3, date=NA)
     r <- as.data.frame(fun(x, ...))
     cbind(r, do.call(rbind, rep(list(h), nrow(r))))
   }
   
-  v <- wav_apply(file, entries=entries, data=T, apply_fun=ifelse(parallel,  mclapply, lapply), fun=f_, ...)
+  v <- wav_apply(file, entries=entries, data=T, apply_fun=mclapply, fun=f_, ...)
   if (exists("rbindlist")) d <- rbindlist(v) #, fill=T)
   else d <- do.call(rbind.data.frame, v)
 
