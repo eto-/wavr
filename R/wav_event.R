@@ -145,3 +145,10 @@ wav_analyze <- function (file, fun, entries=0, parallel=T, ...) {
 
   d
 }
+
+wav_avg <- function(file, indexes, chs, step = 1e3, ...) {
+  ev_  <- function(i) do.call(cbind, wav_event(file, i)$data[chs])  # samples × channels
+  sum_ <- function(idx) Reduce(`+`, lapply(idx, ev_))
+  blocks <- split(indexes, ceiling(seq_along(indexes) / step))
+  Reduce(`+`, mclapply(blocks, sum_, ...)) / length(indexes)
+}
