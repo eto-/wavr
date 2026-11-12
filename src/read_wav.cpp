@@ -30,10 +30,13 @@ Rcpp::List cpp_read_sndfile (const char * fname, int from=1, int to=2147483645, 
     r["samples"] = file.frames ();
     r["sample_rate"] = file.samplerate ();
     r["bits"] = 16;
-    r["date"] = file.getString (SF_STR_DATE);
+    const char *date = file.getString (SF_STR_DATE);
+    if (date) r["date"] = date;
+    const char *artist = file.getString (SF_STR_ARTIST);
+    if (artist) r["artist"] = artist;
   }
 
-  if (to <= 0 || to >= from) {
+  if (to >= from) {
     file.seek (from - 1, SEEK_SET);
     r["data"] = read_n(file, to - from + 1);
   } 

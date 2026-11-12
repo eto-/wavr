@@ -2,7 +2,7 @@ wav_keep_version_0 <- F
 
 wav_event <- function (filename, offset, data=T) {
   header.size <- 20
-  to_32 <- function (v) v[1] + 65536 * v[2]
+  to_32 <- \(v) v[1] + 65536 * v[2]
 
   f <- cpp_read_sndfile (filename, from=offset, to=offset + header.size - 1)
   if (length (f$data) != header.size) {
@@ -112,7 +112,7 @@ wav_apply <- local({
     if (end < start) return()
     if (verbose) cat("Processing", end - start + 1, "entries from", filename, "\n")
 
-    process_event <- function (id, indexes, filename, data, fun, ...) fun(wav_event(filename, indexes[id], data), id=id,...)
+    process_event <- \(id, indexes, filename, data, fun, ...) fun(wav_event(filename, indexes[id], data), id=id,...)
 
     k <- apply_fun(start:end, process_event, index, filename, data, fun, ...)
 
@@ -123,30 +123,42 @@ wav_apply <- local({
     k
 }})
 
-unroll_timetag <- function (time.tag, cpu.time, tag.step=8e-9) {
-  d <- data.frame(tag=time.tag, cpu=cpu.time)
-  d$rt <- diff(c(0, d$cpu))
-  d$dt <- diff(c(0, d$tag))
-  d$dt[d$dt < 0] <- 2**31 + d$dt[d$dt < 0]
-  d$dt <- d$dt * tag.step
-  d$dt[d$rt > 5] <- d$rt[d$rt > 5]
-  t <- cumsum(d$dt)
-  t
+wav_board <- function (file) {
+  a <- cpp_read_sndfile(file, to=0)$artist
+  if (is.null(a)) stop("board not recorded in ", file)
+  sub(" .*", "", a)
+}
+
+tt_spec <- function (board) switch(board,
+  "1720" =, "1730" =, "1751" = c(step=8e-9, wrap=2^31),
+  "1724"                     = c(step=10e-9, wrap=2^31),
+  "1725"                     = c(step=16e-9, wrap=2^31),
+  "2740"                     = c(step=8e-9, wrap=2^32),
+  stop("unknown board ", board))
+
+unroll_timetag <- function (time.tag, cpu.time, tag.step, wrap) {
+  dt <- diff(c(0, time.tag))
+  dt[dt < 0] <- dt[dt < 0] + wrap
+  dt <- dt * tag.step
+  rt <- diff(c(0, cpu.time))
+  dt[rt > 5] <- rt[rt > 5]
+  cumsum(dt)
 }
 
 wav_analyze <- function (file, fun, entries=0, ...) {
-  f_ <- function (x, id, ...)  {
+  f_ <- \(x, id, ...)  {
     h <- c(id=id, counter=x$counter, time=x$time.tag, cpu.time=x$cpu.time.ms * 1e-3, date=NA)
     r <- as.data.frame(fun(x, ...))
     cbind(r, do.call(rbind, rep(list(h), nrow(r))))
   }
-  
+
   v <- wav_apply(file, entries=entries, data=T, apply_fun=mclapply, fun=f_, ...)
   if (exists("rbindlist")) d <- rbindlist(v) #, fill=T)
   else d <- do.call(rbind.data.frame, v)
 
+  s <- tt_spec(wav_board(file))
   d$name <- file
-  d$time <- unroll_timetag(d$time, d$cpu.time)
+  d$time <- unroll_timetag(d$time, d$cpu.time, s[["step"]], s[["wrap"]])
   d$date <- as.POSIXct(wav_event(file, offset=1, data=F)$date, format="%c")
   d$cpu.time <- NULL
   d$index <- attr(v, "index")[d$id]
@@ -155,9 +167,9 @@ wav_analyze <- function (file, fun, entries=0, ...) {
   d
 }
 
-wav_avg <- function(file, indexes, chs, step = 1e3, ...) {
-  ev_  <- function(i) do.call(cbind, wav_event(file, i)$data[chs])  # samples × channels
-  sum_ <- function(idx) Reduce(`+`, lapply(idx, ev_))
+wav_avg <- function (file, indexes, chs, step=1e3, ...) {
+  ev_  <- \(i) do.call(cbind, wav_event(file, i)$data[chs])  # samples × channels
+  sum_ <- \(idx) Reduce(`+`, lapply(idx, ev_))
   blocks <- split(indexes, ceiling(seq_along(indexes) / step))
   Reduce(`+`, mclapply(blocks, sum_, ...)) / length(indexes)
 }
